@@ -7266,177 +7266,162 @@ run(function()
 		return false
 	end
 	
-	Breaker = vape.Categories.Minigames:CreateModule({
-		Name = 'Breaker',
-		Function = function(callback)
-			if callback then
-				for _ = 1, 30 do
-					local part = Instance.new('Part')
-					part.Anchored = true
-					part.CanQuery = false
-					part.CanCollide = false
-					part.Transparency = 1
-					part.Parent = gameCamera
-					local highlight = Instance.new('BoxHandleAdornment')
-					highlight.Size = Vector3.one
-					highlight.AlwaysOnTop = true
-					highlight.ZIndex = 1
-					highlight.Transparency = 0.5
-					highlight.Adornee = part
-					highlight.Parent = part
-					table.insert(parts, part)
-				end
-	
-				local beds = collection('bed', Breaker)
-				local luckyblock = collection('LuckyBlock', Breaker)
-				local ironores = collection('iron-ore', Breaker)
-				customlist = collection('block', Breaker, function(tab, obj)
-					if table.find(Custom.ListEnabled, obj.Name) then
-						table.insert(tab, obj)
-					end
-				end)
-	
-				Breaker:Clean(runService.PreSimulation:Connect(function(dt)
-					if AutoAim.Enabled and targetting then
-						gameCamera.CFrame = gameCamera.CFrame:Lerp(CFrame.lookAt(gameCamera.CFrame.p, targetting), AimSpeed.Value * dt)
-					end
-				end))
-
-				repeat
-					task.wait(1 / UpdateRate.Value)
-					if not Breaker.Enabled then break end
-					if entitylib.isAlive then
-						local localPosition = entitylib.character.RootPart.Position
-	
-						if attemptBreak(Bed.Enabled and beds, localPosition) then continue end
-						if attemptBreak(customlist, localPosition) then continue end
-						if attemptBreak(LuckyBlock.Enabled and luckyblock, localPosition) then continue end
-						if attemptBreak(IronOre.Enabled and ironores, localPosition) then continue end
-	
-						for _, v in parts do
-							v.Position = Vector3.zero
-						end
-					end
-				until not Breaker.Enabled
-			else
-				for _, v in parts do
-					v:ClearAllChildren()
-					v:Destroy()
-				end
-				table.clear(parts)
+Breaker = vape.Categories.Minigames:CreateModule({
+	Name = 'Breaker',
+	Function = function(callback)
+		if callback then
+			for _ = 1, 30 do
+				local part = Instance.new('Part')
+				part.Anchored = true
+				part.CanQuery = false
+				part.CanCollide = false
+				part.Transparency = 1
+				part.Parent = gameCamera
+				local highlight = Instance.new('BoxHandleAdornment')
+				highlight.Size = Vector3.one
+				highlight.AlwaysOnTop = true
+				highlight.ZIndex = 1
+				highlight.Transparency = 0.5
+				highlight.Adornee = part
+				highlight.Parent = part
+				table.insert(parts, part)
 			end
-		end,
-		Tooltip = 'Break blocks around you automatically'
-	})
-	Range = Breaker:CreateSlider({
-		Name = 'Break range',
-		Min = 1,
-		Max = 30,
-		Default = 30,
-		Suffix = function(val)
-			return val == 1 and 'stud' or 'studs'
-		end-- Replace the Break Delay slider assignment so attemptBreak() can read BreakSpeed.Value
+
+			local beds = collection('bed', Breaker)
+			local luckyblock = collection('LuckyBlock', Breaker)
+			local ironores = collection('iron-ore', Breaker)
+			customlist = collection('block', Breaker, function(tab, obj)
+				if table.find(Custom.ListEnabled, obj.Name) then
+					table.insert(tab, obj)
+				end
+			end)
+
+			Breaker:Clean(runService.PreSimulation:Connect(function(dt)
+				if AutoAim.Enabled and targetting then
+					gameCamera.CFrame = gameCamera.CFrame:Lerp(CFrame.lookAt(gameCamera.CFrame.p, targetting), AimSpeed.Value * dt)
+				end
+			end))
+
+			repeat
+				task.wait(1 / UpdateRate.Value)
+				if not Breaker.Enabled then break end
+				if entitylib.isAlive then
+					local localPosition = entitylib.character.RootPart.Position
+
+					if attemptBreak(Bed.Enabled and beds, localPosition) then continue end
+					if attemptBreak(customlist, localPosition) then continue end
+					if attemptBreak(LuckyBlock.Enabled and luckyblock, localPosition) then continue end
+					if attemptBreak(IronOre.Enabled and ironores, localPosition) then continue end
+
+					for _, v in parts do
+						v.Position = Vector3.zero
+					end
+				end
+			until not Breaker.Enabled
+		else
+			for _, v in parts do
+				v:ClearAllChildren()
+				v:Destroy()
+			end
+			table.clear(parts)
+		end
+	end,
+	Tooltip = 'Break blocks around you automatically'
+})
+
+-- sliders / options for Breaker
 Range = Breaker:CreateSlider({
-    Name = 'Break range',
-    Min = 1,
-    Max = 30,
-    Default = 30,
-    Suffix = function(val)
-        return val == 1 and 'stud' or 'studs'
-    end
+	Name = 'Break range',
+	Min = 1,
+	Max = 30,
+	Default = 30,
+	Suffix = function(val)
+		return val == 1 and 'stud' or 'studs'
+	end
 })
+
 BreakSpeed = Breaker:CreateSlider({     -- renamed from Delay to BreakSpeed
-    Name = 'Break Delay',
-    Min = 0,
-    Max = 0.3,
-    Default = 0.25,
-    Decimal = 5,
-    Suffix = function(val)
-        return 's'
-    end
+	Name = 'Break Delay',
+	Min = 0,
+	Max = 0.3,
+	Default = 0.25,
+	Decimal = 5,
+	Suffix = function(val)
+		return 's'
+	end
 })
+-- keep alias in case other code still references Delay
+Delay = BreakSpeed
+
 AimSpeed = Breaker:CreateSlider({
-    Name = 'Aim Speed',
-    Min = 1,
-    Max = 20,
-    Default = 20
+	Name = 'Aim Speed',
+	Min = 1,
+	Max = 20,
+	Default = 20
 })
 AimSpeed.Object.Visible = false
+
 UpdateRate = Breaker:CreateSlider({
-    Name = 'Update rate',
-    Min = 1,
-    Max = 120,
-    Default = 60,
-    Suffix = 'hz'
+	Name = 'Update rate',
+	Min = 1,
+	Max = 120,
+	Default = 60,
+	Suffix = 'hz'
 })
-	AimSpeed = Breaker:CreateSlider({
-		Name = 'Aim Speed',
-		Min = 1,
-		Max = 20,
-		Default = 20
-	})
-	AimSpeed.Object.Visible = false
-	UpdateRate = Breaker:CreateSlider({
-		Name = 'Update rate',
-		Min = 1,
-		Max = 120,
-		Default = 60,
-		Suffix = 'hz'
-	})
-	Custom = Breaker:CreateTextList({
-		Name = 'Custom',
-		Function = function()
-			if not customlist then return end
-			table.clear(customlist)
-			for _, obj in store.blocks do
-				if table.find(Custom.ListEnabled, obj.Name) then
-					table.insert(customlist, obj)
-				end
+
+Custom = Breaker:CreateTextList({
+	Name = 'Custom',
+	Function = function()
+		if not customlist then return end
+		table.clear(customlist)
+		for _, obj in store.blocks do
+			if table.find(Custom.ListEnabled, obj.Name) then
+				table.insert(customlist, obj)
 			end
 		end
-	})
-	Bed = Breaker:CreateToggle({
-		Name = 'Break Bed',
-		Default = true
-	})
-	AutoAim = Breaker:CreateToggle({
-		Name = 'Auto Aim',
-		Function = function(call)
-			AimSpeed.Object.Visible = call
+	end
+})
+Bed = Breaker:CreateToggle({
+	Name = 'Break Bed',
+	Default = true
+})
+AutoAim = Breaker:CreateToggle({
+	Name = 'Auto Aim',
+	Function = function(call)
+		AimSpeed.Object.Visible = call
+	end
+})
+LuckyBlock = Breaker:CreateToggle({
+	Name = 'Break Lucky Block',
+	Default = true
+})
+IronOre = Breaker:CreateToggle({
+	Name = 'Break Iron Ore',
+	Default = true
+})
+Effect = Breaker:CreateToggle({
+	Name = 'Show Healthbar & Effects',
+	Function = function(callback)
+		if CustomHealth.Object then
+			CustomHealth.Object.Visible = callback
 		end
-	})
-	LuckyBlock = Breaker:CreateToggle({
-		Name = 'Break Lucky Block',
-		Default = true
-	})
-	IronOre = Breaker:CreateToggle({
-		Name = 'Break Iron Ore',
-		Default = true
-	})
-	Effect = Breaker:CreateToggle({
-		Name = 'Show Healthbar & Effects',
-		Function = function(callback)
-			if CustomHealth.Object then
-				CustomHealth.Object.Visible = callback
-			end
-		end,
-		Default = true
-	})
-	CustomHealth = Breaker:CreateToggle({
-		Name = 'Custom Healthbar',
-		Default = true,
-		Darker = true
-	})
-	Animation = Breaker:CreateToggle({Name = 'Animation'})
-	SelfBreak = Breaker:CreateToggle({Name = 'Self Break'})
-	WallCheck = Breaker:CreateToggle({Name = 'Wall Check'})
-	Cache = Breaker:CreateToggle({Name = 'Break through block'})
-	AutoTool = Breaker:CreateToggle({Name = 'Auto Tool'})
-	LimitItem = Breaker:CreateToggle({
-		Name = 'Limit to items',
-		Tooltip = 'Only breaks when tools are held'
-	})
-end)
+	end,
+	Default = true
+})
+CustomHealth = Breaker:CreateToggle({
+	Name = 'Custom Healthbar',
+	Default = true,
+	Darker = true
+})
+Animation = Breaker:CreateToggle({Name = 'Animation'})
+SelfBreak = Breaker:CreateToggle({Name = 'Self Break'})
+WallCheck = Breaker:CreateToggle({Name = 'Wall Check'})
+Cache = Breaker:CreateToggle({Name = 'Break through block'})
+AutoTool = Breaker:CreateToggle({Name = 'Auto Tool'})
+LimitItem = Breaker:CreateToggle({
+	Name = 'Limit to items',
+	Tooltip = 'Only breaks when tools are held'
+})
 	
 	
 run(function()
