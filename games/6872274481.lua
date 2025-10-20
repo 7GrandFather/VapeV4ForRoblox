@@ -7335,18 +7335,40 @@ run(function()
 		Default = 30,
 		Suffix = function(val)
 			return val == 1 and 'stud' or 'studs'
-		end
-	})
-	Delay = Breaker:CreateSlider({
-		Name = 'Break Delay',
-		Min = 0,
-		Max = 0.3,
-		Default = 0.25,
-		Decimal = 5,
-		Suffix = function(val)
-			return 's'
-		end
-	})
+		end-- Replace the Break Delay slider assignment so attemptBreak() can read BreakSpeed.Value
+Range = Breaker:CreateSlider({
+    Name = 'Break range',
+    Min = 1,
+    Max = 30,
+    Default = 30,
+    Suffix = function(val)
+        return val == 1 and 'stud' or 'studs'
+    end
+})
+BreakSpeed = Breaker:CreateSlider({     -- renamed from Delay to BreakSpeed
+    Name = 'Break Delay',
+    Min = 0,
+    Max = 0.3,
+    Default = 0.25,
+    Decimal = 5,
+    Suffix = function(val)
+        return 's'
+    end
+})
+AimSpeed = Breaker:CreateSlider({
+    Name = 'Aim Speed',
+    Min = 1,
+    Max = 20,
+    Default = 20
+})
+AimSpeed.Object.Visible = false
+UpdateRate = Breaker:CreateSlider({
+    Name = 'Update rate',
+    Min = 1,
+    Max = 120,
+    Default = 60,
+    Suffix = 'hz'
+})
 	AimSpeed = Breaker:CreateSlider({
 		Name = 'Aim Speed',
 		Min = 1,
