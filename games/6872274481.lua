@@ -656,12 +656,12 @@ run(function()
 		repeat task.wait() until debug.getupvalue(Knit.Start, 1)
 	end
 
-	local Flamework = require(replicatedStorage['rbxts_include']['node_modules']['@flamework'].core.out).Flamework
-	local InventoryUtil = require(replicatedStorage.TS.inventory['inventory-util']).InventoryUtil
-	local Client = require(replicatedStorage.TS.remotes).default.Client
+	local Flamework = canReq and require(replicatedStorage['rbxts_include']['node_modules']['@flamework'].core.out).Flamework or construct.Flamework
+	local InventoryUtil = canReq and require(replicatedStorage.TS.inventory['inventory-util']).InventoryUtil or {}
+	local Client = canReq and require(replicatedStorage.TS.remotes).default.Client or construct.controllers.Client
 	local OldGet, OldBreak = Client.Get
 
-	bedwars = setmetatable({
+	bedwars = not canReq and construct.controllers or setmetatable({
 		AbilityController = Flamework.resolveDependency('@easy-games/game-core:client/controllers/ability/ability-controller@AbilityController'),
 		AnimationType = require(replicatedStorage.TS.animation['animation-type']).AnimationType,
 		AnimationUtil = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out['shared'].util['animation-util']).AnimationUtil,
@@ -670,8 +670,8 @@ run(function()
 		BedwarsKitMeta = require(replicatedStorage.TS.games.bedwars.kit['bedwars-kit-meta']).BedwarsKitMeta,
 		BlockBreaker = Knit.Controllers.BlockBreakController.blockBreaker,
 		BlockController = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['block-engine'].out).BlockEngine,
-		BlockEngine = require(lplr.PlayerScripts.TS.lib['block-engine']['client-block-engine']).ClientBlockEngine,
 		BlockPlacer = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['block-engine'].out.client.placement['block-placer']).BlockPlacer,
+		BlockEngine = require(lplr.PlayerScripts.TS.lib['block-engine']['client-block-engine']).ClientBlockEngine,
 		BowConstantsTable = debug.getupvalue(Knit.Controllers.ProjectileController.enableBeam, 8),
 		ClickHold = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out.client.ui.lib.util['click-hold']).ClickHold,
 		Client = Client,
@@ -697,13 +697,13 @@ run(function()
 		end,
 		HudAliveCount = require(lplr.PlayerScripts.TS.controllers.global['top-bar'].ui.game['hud-alive-player-counts']).HudAlivePlayerCounts,
 		ItemMeta = debug.getupvalue(require(replicatedStorage.TS.item['item-meta']).getItemMeta, 1),
+		RecipeMeta = debug.getupvalue(require(replicatedStorage.TS.recipe['recipe-meta']).getRecipeMeta, 1),
 		KillEffectMeta = require(replicatedStorage.TS.locker['kill-effect']['kill-effect-meta']).KillEffectMeta,
 		KillFeedController = Flamework.resolveDependency('client/controllers/game/kill-feed/kill-feed-controller@KillFeedController'),
 		Knit = Knit,
 		KnockbackUtil = require(replicatedStorage.TS.damage['knockback-util']).KnockbackUtil,
-		MageKitUtil = require(replicatedStorage.TS.games.bedwars.kit.kits.mage['mage-kit-util']).MageKitUtil,
 		NametagController = Knit.Controllers.NametagController,
-		PartyController = Flamework.resolveDependency('@easy-games/lobby:client/controllers/party-controller@PartyController'),
+		MageKitUtil = require(replicatedStorage.TS.games.bedwars.kit.kits.mage['mage-kit-util']).MageKitUtil,
 		ProjectileMeta = require(replicatedStorage.TS.projectile['projectile-meta']).ProjectileMeta,
 		QueryUtil = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out).GameQueryUtil,
 		QueueCard = require(lplr.PlayerScripts.TS.controllers.global.queue.ui['queue-card']).QueueCard,
@@ -714,6 +714,9 @@ run(function()
 		SoundManager = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out).SoundManager,
 		Store = require(lplr.PlayerScripts.TS.ui.store).ClientStore,
 		TeamUpgradeMeta = debug.getupvalue(require(replicatedStorage.TS.games.bedwars['team-upgrade']['team-upgrade-meta']).getTeamUpgradeMetaForQueue, 6),
+		PyroUpgradeMeta = debug.getupvalue(require(replicatedStorage.TS.games.bedwars.kit.kits.pyro['flamethrower-upgrade']).getFlamethrowerUpgradeMeta, 1),
+		AdetundeUpgradeMeta = debug.getupvalue(require(replicatedStorage.TS.games.bedwars.items['frosty-hammer']['frosty-hammer-upgrades']).getFrostyHammerUpgradeMeta, 1),
+		AdetundeUtil = require(replicatedStorage.TS.games.bedwars.items['frosty-hammer']['frosty-hammer-util']).FrostyHammerUtil,
 		UILayers = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out).UILayers,
 		VisualizerUtils = require(lplr.PlayerScripts.TS.lib.visualizer['visualizer-utils']).VisualizerUtils,
 		WeldTable = require(replicatedStorage.TS.util['weld-util']).WeldUtil,
@@ -726,37 +729,45 @@ run(function()
 		end
 	})
 
+
 	local remoteNames = {
-		AfkStatus = debug.getproto(Knit.Controllers.AfkController.KnitStart, 1),
-		AttackEntity = Knit.Controllers.SwordController.sendServerRequest,
-		BeePickup = Knit.Controllers.BeeNetController.trigger,
-		CannonAim = debug.getproto(Knit.Controllers.CannonController.startAiming, 5),
-		CannonLaunch = Knit.Controllers.CannonHandController.launchSelf,
-		ConsumeBattery = debug.getproto(Knit.Controllers.BatteryController.onKitLocalActivated, 1),
-		ConsumeItem = debug.getproto(Knit.Controllers.ConsumeController.onEnable, 1),
-		ConsumeSoul = Knit.Controllers.GrimReaperController.consumeSoul,
-		ConsumeTreeOrb = debug.getproto(Knit.Controllers.EldertreeController.createTreeOrbInteraction, 1),
-		DepositPinata = debug.getproto(debug.getproto(Knit.Controllers.PiggyBankController.KnitStart, 2), 5),
-		DragonBreath = debug.getproto(Knit.Controllers.VoidDragonController.onKitLocalActivated, 5),
-		DragonEndFly = debug.getproto(Knit.Controllers.VoidDragonController.flapWings, 1),
-		DragonFly = Knit.Controllers.VoidDragonController.flapWings,
-		DropItem = Knit.Controllers.ItemDropController.dropItemInHand,
-		EquipItem = debug.getproto(require(replicatedStorage.TS.entity.entities['inventory-entity']).InventoryEntity.equipItem, 3),
-		FireProjectile = debug.getupvalue(Knit.Controllers.ProjectileController.launchProjectileWithValues, 2),
-		GroundHit = Knit.Controllers.FallDamageController.KnitStart,
-		GuitarHeal = Knit.Controllers.GuitarController.performHeal,
-		HannahKill = debug.getproto(Knit.Controllers.HannahController.registerExecuteInteractions, 1),
-		HarvestCrop = debug.getproto(debug.getproto(Knit.Controllers.CropController.KnitStart, 4), 1),
-		KaliyahPunch = debug.getproto(Knit.Controllers.DragonSlayerController.onKitLocalActivated, 1),
-		MageSelect = debug.getproto(Knit.Controllers.MageController.registerTomeInteraction, 1),
-		MinerDig = debug.getproto(Knit.Controllers.MinerController.setupMinerPrompts, 1),
-		PickupItem = Knit.Controllers.ItemDropController.checkForPickup,
-		PickupMetal = debug.getproto(Knit.Controllers.HiddenMetalController.onKitLocalActivated, 4),
-		ReportPlayer = require(lplr.PlayerScripts.TS.controllers.global.report['report-controller']).default.reportPlayer,
-		ResetCharacter = debug.getproto(Knit.Controllers.ResetController.createBindable, 1),
-		SpawnRaven = debug.getproto(Knit.Controllers.RavenController.KnitStart, 1),
-		SummonerClawAttack = Knit.Controllers.SummonerClawHandController.attack,
-		WarlockTarget = debug.getproto(Knit.Controllers.WarlockStaffController.KnitStart, 2)
+		AfkStatus = canReq and debug.getproto(Knit.Controllers.AfkController.KnitStart, 1) or 'AfkInfo',
+		AttackEntity = canReq and Knit.Controllers.SwordController.sendServerRequest or 'SwordHit',
+		BeePickup = canReq and Knit.Controllers.BeeNetController.trigger or 'PickUpBee',
+		ConsumeBattery = canReq and debug.getproto(Knit.Controllers.BatteryController.onKitLocalActivated, 1) or 'ConsumeBattery',
+		CannonAim = canReq and debug.getproto(Knit.Controllers.CannonController.startAiming, 5) or 'AimCannon',
+		CannonLaunch = canReq and Knit.Controllers.CannonHandController.launchSelf or 'LaunchSelfFromCannon',
+		ConsumeItem = canReq and debug.getproto(Knit.Controllers.ConsumeController.onEnable, 1) or 'ConsumeItem',
+		ConsumeSoul = canReq and Knit.Controllers.GrimReaperController.consumeSoul or 'ConsumeGrimReaperSoul',
+		ConsumeTreeOrb = canReq and debug.getproto(Knit.Controllers.EldertreeController.createTreeOrbInteraction, 1) or 'ConsumeTreeOrb',
+		DepositPinata = (identifyexecutor() == 'Delta' or not canReq) and (not canReq and '' or function() end) or debug.getproto(debug.getproto(Knit.Controllers.PiggyBankController.KnitStart, 2), 5),
+		DragonBreath = canReq and debug.getproto(Knit.Controllers.VoidDragonController.onKitLocalActivated, 5) or 'DragonBreath',
+		DragonEndFly = canReq and debug.getproto(Knit.Controllers.VoidDragonController.flapWings, 1) or 'VoidDragonEndFlying',
+		DragonFly = canReq and Knit.Controllers.VoidDragonController.flapWings or 'VoidDragonEndFlying',
+		DropItem = canReq and Knit.Controllers.ItemDropController.dropItemInHand or 'DropItem',
+		EquipItem = canReq and debug.getproto(require(replicatedStorage.TS.entity.entities['inventory-entity']).InventoryEntity.equipItem, 3) or 'SetInvItem',
+		FireProjectile = canReq and debug.getupvalue(Knit.Controllers.ProjectileController.launchProjectileWithValues, 2) or 'ProjectileFire',
+		GroundHit = canReq and Knit.Controllers.FallDamageController.KnitStart or 'GroundHit',
+		GuitarHeal = canReq and Knit.Controllers.GuitarController.performHeal or 'PlayGuitar',
+		HannahKill = canReq and debug.getproto(Knit.Controllers.HannahController.registerExecuteInteractions, 1) or 'HannahPromptTrigger',
+		HarvestCrop = (identifyexecutor() == 'Delta' or not canReq) and (not canReq and '' or function() end) or debug.getproto(debug.getproto(Knit.Controllers.CropController.KnitStart, 4), 1),
+		KaliyahPunch = canReq and debug.getproto(Knit.Controllers.DragonSlayerController.onKitLocalActivated, 1) or 'RequestDragonPunch',
+		MageSelect = canReq and debug.getproto(Knit.Controllers.MageController.registerTomeInteraction, 1) or '',
+		MinerDig = canReq and debug.getproto(Knit.Controllers.MinerController.setupMinerPrompts, 1) or '',
+		PickupItem = canReq and Knit.Controllers.ItemDropController.checkForPickup or 'PickupItemDrop',
+		PickupMetal = canReq and debug.getproto(Knit.Controllers.HiddenMetalController.onKitLocalActivated, 4) or '',
+		ReportPlayer = canReq and require(lplr.PlayerScripts.TS.controllers.global.report['report-controller']).default.reportPlayer or 'ReportPlayer',
+		ResetCharacter = canReq and debug.getproto(Knit.Controllers.ResetController.createBindable, 1) or 'ResetCharacter',
+		SpawnRaven = canReq and debug.getproto(Knit.Controllers.RavenController.KnitStart, 1) or 'SpawnRaven',
+		SummonerClawAttack = canReq and Knit.Controllers.SummonerClawHandController.attack or 'SummonerClawAttackRequest',
+		WarlockTarget = canReq and debug.getproto(Knit.Controllers.WarlockStaffController.KnitStart, 2) or ''
+	}
+	
+	local preDumped = {
+		SummonerClawAttack = 'SummonerClawAttackRequest',
+		EquipItem = 'SetInvItem',
+		HarvestCrop = 'CropHarvest',
+		DepositPinata = 'DepositCoins'
 	}
 
 	local function dumpRemote(tab)
@@ -770,49 +781,56 @@ run(function()
 		return ind and tab[ind + 1] or ''
 	end
 
-	for i, v in remoteNames do
-		local remote = dumpRemote(debug.getconstants(v))
-		if remote == '' then
-			notif('Vape', 'Failed to grab remote ('..i..')', 10, 'alert')
+	if canReq then
+		for i, v in remoteNames do
+			local remote = dumpRemote(debug.getconstants(v))
+			if remote == '' then
+				if not preDumped[i] or preDumped[i] == '' then
+					notif('Vape', 'Failed to grab remote ('..i..')', 10, 'alert')
+				end
+				remote = preDumped[i]
+			end
+			remotes[i] = remote
 		end
-		remotes[i] = remote
 	end
 
 	OldBreak = bedwars.BlockController.isBlockBreakable
 
-	Client.Get = function(self, remoteName)
-		local call = OldGet(self, remoteName)
+	if canReq then
+		Client.Get = function(self, remoteName)
+			local call = OldGet(self, remoteName)
 
-		if remoteName == remotes.AttackEntity then
-			return {
-				instance = call.instance,
-				SendToServer = function(_, attackTable, ...)
-					local suc, plr = pcall(function()
-						return playersService:GetPlayerFromCharacter(attackTable.entityInstance)
-					end)
+			if remoteName == remotes.AttackEntity then
+				return {
+					instance = call.instance,
+					SendToServer = function(_, attackTable, ...)
+						local suc, plr = pcall(function()
+							return playersService:GetPlayerFromCharacter(attackTable.entityInstance)
+						end)
 
-					local selfpos = attackTable.validate.selfPosition.value
-					local targetpos = attackTable.validate.targetPosition.value
-					store.attackReach = ((selfpos - targetpos).Magnitude * 100) // 1 / 100
-					store.attackReachUpdate = tick() + 1
+						local selfpos = attackTable.validate.selfPosition.value
+						local targetpos = attackTable.validate.targetPosition.value
+						store.attackReach = ((selfpos - targetpos).Magnitude * 100) // 1 / 100
+						store.attackReachUpdate = os.clock() + 1
 
-					if Reach.Enabled or HitBoxes.Enabled then
-						attackTable.validate.raycast = attackTable.validate.raycast or {}
-						attackTable.validate.selfPosition.value += CFrame.lookAt(selfpos, targetpos).LookVector * math.max((selfpos - targetpos).Magnitude - 14.399, 0)
+						if Reach.Enabled or HitBoxes.Enabled then
+							attackTable.validate.raycast = attackTable.validate.raycast or {}
+							attackTable.validate.selfPosition.value += CFrame.lookAt(selfpos, targetpos).LookVector * math.max((selfpos - targetpos).Magnitude - 14.399, 0)
+						end
+
+						if suc and plr then
+							if not select(2, whitelist:get(plr)) then return end
+						end
+
+						return call:SendToServer(attackTable, ...)
 					end
+				}
+			elseif remoteName == 'StepOnSnapTrap' and TrapDisabler.Enabled then
+				return {SendToServer = function() end}
+			end
 
-					if suc and plr then
-						if not select(2, whitelist:get(plr)) then return end
-					end
-
-					return call:SendToServer(attackTable, ...)
-				end
-			}
-		elseif remoteName == 'StepOnSnapTrap' and TrapDisabler.Enabled then
-			return {SendToServer = function() end}
+			return call
 		end
-
-		return call
 	end
 
 	bedwars.BlockController.isBlockBreakable = function(self, breakTable, plr)
@@ -850,9 +868,6 @@ run(function()
 		Source: https://stackoverflow.com/questions/39355587/speeding-up-dijkstras-algorithm-to-solve-a-3d-maze
 	]]
 	local function calculatePath(target, blockpos)
-		if cache[blockpos] then
-			return unpack(cache[blockpos])
-		end
 		local visited, unvisited, distances, air, path = {}, {{0, blockpos}}, {[blockpos] = 0}, {}, {}
 
 		for _ = 1, 10000 do
@@ -882,19 +897,26 @@ run(function()
 			end
 		end
 
-		local pos, cost = nil, math.huge
-		for node in air do
-			if distances[node] < cost then
-				pos, cost = node, distances[node]
-			end
+		local dump = {}
+		for i,v in air do
+			table.insert(dump, i)
 		end
+		table.sort(dump, function(a, b)
+			return distances[a] < distances[b]
+		end)
+
+		local pos, cost = dump[1], distances[dump[1]]
 
 		if pos then
 			cache[blockpos] = {
 				pos,
 				cost,
-				path
+				path,
+				os.clock() + 0.1
 			}
+			delay(0.3, function()
+				cache[blockpos] = nil
+			end)
 			return pos, cost, path
 		end
 	end
@@ -906,15 +928,23 @@ run(function()
 		end
 	end
 
-	bedwars.breakBlock = function(block, effects, anim, customHealthbar)
-		if lplr:GetAttribute('DenyBlockBreak') or not entitylib.isAlive or InfiniteFly.Enabled then return end
+	bedwars.breakBlock = function(block, effects, anim, customHealthbar, autotool, wallcheck, nobreak)
+		if lplr:GetAttribute('DenyBlockBreak') or not entitylib.isAlive or FlyLandTick > os.clock() then return end
 		local handler = bedwars.BlockController:getHandlerRegistry():getHandler(block.Name)
 		local cost, pos, target, path = math.huge
+		local mag = 9e9
 
-		for _, v in (handler and handler:getContainedPositions(block) or {block.Position / 3}) do
+		local positions = (handler and handler:getContainedPositions(block) or {block.Position / 3})
+
+		table.sort(positions, function(a, b)
+			return (entitylib.character.RootPart.Position - (a * 3)).Magnitude <= (entitylib.character.RootPart.Position - (b * 3)).Magnitude 
+		end)
+
+		for _, v in positions do
 			local dpos, dcost, dpath = calculatePath(block, v * 3)
-			if dpos and dcost < cost then
-				cost, pos, target, path = dcost, dpos, v * 3, dpath
+			local dmag = dpos and (entitylib.character.RootPart.Position - dpos).Magnitude
+			if dpos and dcost < cost and (wallcheck and not entitylib.Wallcheck(dpos, entitylib.character.RootPart.Position) or not wallcheck) and dmag < mag then
+				cost, pos, target, path, mag = dcost, dpos, v * 3, dpath, dmag
 			end
 		end
 
@@ -923,11 +953,20 @@ run(function()
 			local dblock, dpos = getPlacedBlock(pos)
 			if not dblock then return end
 
-			if (workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack) > 0.4 then
+			if not nobreak and (workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack) > 0.4 then
 				local breaktype = bedwars.ItemMeta[dblock.Name].block.breakType
 				local tool = store.tools[breaktype]
 				if tool then
-					switchItem(tool.tool)
+					if autotool then
+						for i, v in store.inventory.hotbar do
+							if v.item and v.item.tool == tool.tool and i ~= (store.inventory.hotbarSlot + 1) then 
+								hotbarSwitch(i - 1)
+								break
+							end
+						end
+					else
+						switchItem(tool.tool)
+					end
 				end
 			end
 
@@ -936,41 +975,44 @@ run(function()
 				blockhealthbar.breakingBlockPosition = dpos
 			end
 
-			bedwars.ClientDamageBlock:Get('DamageBlock'):CallServerAsync({
-				blockRef = {blockPosition = dpos},
-				hitPosition = pos,
-				hitNormal = Vector3.FromNormalId(Enum.NormalId.Top)
-			}):andThen(function(result)
-				if result then
-					if result == 'cancelled' then
-						store.damageBlockFail = tick() + 1
-						return
-					end
+			if not nobreak then
+				bedwars.ClientDamageBlock:Get('DamageBlock'):CallServerAsync({
+					blockRef = {blockPosition = dpos},
+					hitPosition = pos,
+					hitNormal = Vector3.FromNormalId(Enum.NormalId.Top)
+				}):andThen(function(result)
+					if result then
+						if result == 'cancelled' then
+							store.damageBlockFail = os.clock() + 1
+							table.clear(cache)
+							return
+						end
 
-					if effects then
-						local blockdmg = (blockhealthbar.blockHealth - (result == 'destroyed' and 0 or getBlockHealth(dblock, dpos)))
-						customHealthbar = customHealthbar or bedwars.BlockBreaker.updateHealthbar
-						customHealthbar(bedwars.BlockBreaker, {blockPosition = dpos}, blockhealthbar.blockHealth, dblock:GetAttribute('MaxHealth'), blockdmg, dblock)
-						blockhealthbar.blockHealth = math.max(blockhealthbar.blockHealth - blockdmg, 0)
+						if effects then
+							local blockdmg = (blockhealthbar.blockHealth - (result == 'destroyed' and 0 or getBlockHealth(dblock, dpos)))
+							customHealthbar = customHealthbar or bedwars.BlockBreaker.updateHealthbar
+							customHealthbar(bedwars.BlockBreaker, {blockPosition = dpos}, blockhealthbar.blockHealth, dblock:GetAttribute('MaxHealth'), blockdmg, dblock)
+							blockhealthbar.blockHealth = math.max(blockhealthbar.blockHealth - blockdmg, 0)
 
-						if blockhealthbar.blockHealth <= 0 then
-							bedwars.BlockBreaker.breakEffect:playBreak(dblock.Name, dpos, lplr)
-							bedwars.BlockBreaker.healthbarMaid:DoCleaning()
-							blockhealthbar.breakingBlockPosition = Vector3.zero
-						else
-							bedwars.BlockBreaker.breakEffect:playHit(dblock.Name, dpos, lplr)
+							if blockhealthbar.blockHealth <= 0 then
+								bedwars.BlockBreaker.breakEffect:playBreak(dblock.Name, dpos, lplr)
+								bedwars.BlockBreaker.healthbarMaid:DoCleaning()
+								blockhealthbar.breakingBlockPosition = Vector3.zero
+							else
+								bedwars.BlockBreaker.breakEffect:playHit(dblock.Name, dpos, lplr)
+							end
+						end
+
+						if anim then
+							local animation = bedwars.AnimationUtil:playAnimation(lplr, bedwars.BlockController:getAnimationController():getAssetId(1))
+							bedwars.ViewmodelController:playAnimation(15)
+							task.wait(0.3)
+							animation:Stop()
+							animation:Destroy()
 						end
 					end
-
-					if anim then
-						local animation = bedwars.AnimationUtil:playAnimation(lplr, bedwars.BlockController:getAnimationController():getAssetId(1))
-						bedwars.ViewmodelController:playAnimation(15)
-						task.wait(0.3)
-						animation:Stop()
-						animation:Destroy()
-					end
-				end
-			end)
+				end)
+			end
 
 			if effects then
 				return pos, path, target
@@ -1037,37 +1079,80 @@ run(function()
 		end)
 	end
 
-	vape:Clean(bedwars.ZapNetworking.EntityDamageEventZap.On(function(...)
-		vapeEvents.EntityDamageEvent:Fire({
-			entityInstance = ...,
-			damage = select(2, ...),
-			damageType = select(3, ...),
-			fromPosition = select(4, ...),
-			fromEntity = select(5, ...),
-			knockbackMultiplier = select(6, ...),
-			knockbackId = select(7, ...),
-			disableDamageHighlight = select(13, ...)
-		})
-	end))
+	if canReq then --> fuck nah aint adding allat
+		vape:Clean(bedwars.ZapNetworking.EntityDamageEventZap.On(function(...)
+			vapeEvents.EntityDamageEvent:Fire({
+				entityInstance = ...,
+				damage = select(2, ...),
+				damageType = select(3, ...),
+				fromPosition = select(4, ...),
+				fromEntity = select(5, ...),
+				knockbackMultiplier = select(6, ...),
+				knockbackId = select(7, ...),
+				disableDamageHighlight = select(13, ...)
+			})
+		end))
 
-	for _, event in {'PlaceBlockEvent', 'BreakBlockEvent'} do
-		vape:Clean(bedwars.ZapNetworking[event..'Zap'].On(function(...)
-			local data = {
-				blockRef = {
-					blockPosition = ...,
-				},
-				player = select(5, ...)
-			}
-			for i, v in cache do
-				if ((data.blockRef.blockPosition * 3) - v[1]).Magnitude <= 30 then
-					table.clear(v[3])
-					table.clear(v)
-					cache[i] = nil
+		vape:Clean(bedwars.ZapNetworking.ProjectileLaunchZap.On(function(...)
+			vapeEvents.ProjectileLaunch:Fire({
+				raycastPosition = ...,
+				projectileType = select(3, ...),
+				fromPosition = select(2, ...),
+				fromEntity = select(7, ...),
+				id = select(4, ...),
+				projectileData = select(8, ...)
+			})
+		end))
+
+		for _, event in {'PlaceBlockEvent', 'BreakBlockEvent'} do
+			vape:Clean(bedwars.ZapNetworking[event..'Zap'].On(function(...)
+				local data = {
+					blockRef = {
+						blockPosition = ...,
+					},
+					player = select(5, ...)
+				}
+				for i, v in cache do
+					if ((data.blockRef.blockPosition * 3) - v[1]).Magnitude <= 30 then
+						table.clear(v[3])
+						table.clear(v)
+						cache[i] = nil
+					end
 				end
-			end
-			vapeEvents[event]:Fire(data)
+				vapeEvents[event]:Fire(data)
+			end))
+		end
+	else
+		vape:Clean(task.spawn(function()
+			local lastHP = 100
+			repeat
+				if entitylib.isAlive then
+					if entitylib.character.Humanoid.Health < lastHP then
+						vapeEvents.EntityDamageEvent:Fire({
+							entityInstance = lplr.Character,
+							damage = lastHP - entitylib.character.Humanoid.Health,
+							damageType = 'unknown',
+							fromPosition = entitylib.character.RootPart.Position,
+							fromEntity = lplr.Character,
+							knockbackMultiplier = {
+								horizontal = 0.5,
+								vertical = 1
+							},
+							knockbackId = httpService:GenerateGUID(true),
+							disableDamageHighlight = false
+						})
+					end
+					lastHP = entitylib.character.Humanoid.Health
+				end
+				task.wait()
+			until false
 		end))
 	end
+
+	vape:Clean(bedwars.Client:Get('BloodAssassinUpdateAvailableContracts'):Connect(function(con)
+		store.contracts = con.contracts
+		notif('Vape', 'Contract updated', 6, 'info')
+	end))
 
 	store.blocks = collection('block', gui)
 	store.shop = collection({'BedwarsItemShop', 'TeamUpgradeShopkeeper'}, gui, function(tab, obj)
